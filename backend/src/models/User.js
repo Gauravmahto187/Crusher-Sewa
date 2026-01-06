@@ -22,8 +22,12 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "contractor"],
-      default: "contractor",
+      enum: ["ADMIN", "MANAGER", "CONTRACTOR"],
+      default: "CONTRACTOR",
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }
@@ -49,7 +53,8 @@ export const ensureAdminSeed = async () => {
   if (existing) {
     existing.password = password;
     existing.name = name;
-    existing.role = "admin";
+    existing.role = "ADMIN";
+    existing.isActive = true;
     await existing.save();
     return "updated";
   }
@@ -58,7 +63,8 @@ export const ensureAdminSeed = async () => {
     name,
     email,
     password,
-    role: "admin",
+    role: "ADMIN",
+    isActive: true,
   });
   return "created";
 };

@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-export const protect = async (req, res, next) => {
+export const requireAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -18,6 +18,10 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({ message: "Not authorized, user not found" });
     }
 
+    if (!user.isActive) {
+      return res.status(401).json({ message: "Account is deactivated" });
+    }
+
     req.user = user;
     next();
   } catch (err) {
@@ -25,13 +29,25 @@ export const protect = async (req, res, next) => {
   }
 };
 
-export const adminOnly = (req, res, next) => {
-  if (!req.user || req.user.role !== "admin") {
-    return res
-      .status(403)
-      .json({ message: "Forbidden: admin access required" });
-  }
+// Alias for backward compatibility
+export const protect = requireAuth;
 
-  next();
+export const authorizeRoles = (...allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res
+        .status(403)
+        .json({ message: "Forbidden: insufficient permissions" });
+    }
+
+    next();
+  };
 };
+
+// Legacy adminOnly for backward compatibility
+export const adminOnly = authorizeRoles("ADMIN");
 

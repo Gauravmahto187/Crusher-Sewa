@@ -1,0 +1,113 @@
+import { Link, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth.js";
+
+const AdminLayout = () => {
+  const location = useLocation();
+  const { user, logout } = useAuth();
+
+  const isActive = (path) => location.pathname === path;
+
+  const navItems = [
+    { path: "/admin/dashboard", label: "Dashboard", icon: "grid" },
+    { path: "/admin/users/create", label: "Create User", icon: "plus" },
+    { path: "/admin/users", label: "Manage Users", icon: "users" },
+  ];
+
+  const getIcon = (name) => {
+    switch (name) {
+      case "grid":
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+        );
+      case "plus":
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+        );
+      case "users":
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-stone-100 flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white border-r border-stone-200 flex flex-col fixed h-full">
+        <div className="p-6">
+          <Link to="/admin/dashboard" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">CS</span>
+            </div>
+            <div>
+              <span className="text-base font-semibold text-stone-800 block">Crusher Sewa</span>
+              <span className="text-xs text-stone-400">Admin Panel</span>
+            </div>
+          </Link>
+        </div>
+
+        <nav className="px-3 flex-1">
+          <div className="text-xs font-medium text-stone-400 uppercase tracking-wider px-3 mb-2">
+            Menu
+          </div>
+          <div className="space-y-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                  isActive(item.path)
+                    ? "bg-teal-50 text-teal-700"
+                    : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                }`}
+              >
+                {getIcon(item.icon)}
+                <span className="font-medium text-sm">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        </nav>
+
+        <div className="p-3 border-t border-stone-200">
+          <div className="flex items-center gap-3 px-3 py-2 mb-2">
+            <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+              <span className="text-teal-700 font-medium text-sm">
+                {user?.name?.charAt(0) || "A"}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-stone-900 truncate">{user?.name}</p>
+              <p className="text-xs text-stone-500 truncate">{user?.email}</p>
+            </div>
+          </div>
+          <button
+            onClick={logout}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-stone-600 hover:text-stone-900 hover:bg-stone-50 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Sign out
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 ml-64">
+        <div className="p-8">
+          <Outlet />
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default AdminLayout;

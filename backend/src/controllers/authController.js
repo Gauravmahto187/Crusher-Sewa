@@ -3,21 +3,51 @@ import User from "../models/User.js";
 import { generateToken } from "../utils/generateToken.js";
 
 export const registerUser = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password } = req.body;
 
+  // Validation messages
   if (!name || !email || !password) {
-    return res
-      .status(400)
-      .json({ message: "Name, email, and password are required" });
+    return res.status(400).json({ 
+      message: "Please fill in all fields" 
+    });
+  }
+
+  if (name.trim().length < 2) {
+    return res.status(400).json({ 
+      message: "Name must be at least 2 characters long" 
+    });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ 
+      message: "Password must be at least 6 characters long" 
+    });
+  }
+
+  // Email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ 
+      message: "Please enter a valid email address" 
+    });
   }
 
   try {
     const existing = await User.findOne({ email });
     if (existing) {
-      return res.status(400).json({ message: "Email already registered" });
+      return res.status(400).json({ 
+        message: "This email is already registered. Please use a different email or try logging in." 
+      });
     }
 
-    const user = await User.create({ name, email, password, role });
+    // Force CONTRACTOR role for public registration
+    const user = await User.create({ 
+      name: name.trim(), 
+      email: email.toLowerCase().trim(), 
+      password, 
+      role: "CONTRACTOR",
+      isActive: true 
+    });
     const token = generateToken(user);
 
     return res.status(201).json({
@@ -28,11 +58,20 @@ export const registerUser = async (req, res) => {
         role: user.role,
       },
       token,
+      message: "Account created successfully! Welcome to Crusher Material Sewa.",
     });
   } catch (err) {
-    return res
-      .status(500)
-      .json({ message: "Failed to register user", error: err.message });
+    // Handle Mongoose validation errors
+    if (err.name === "ValidationError") {
+      const errors = Object.values(err.errors).map(e => e.message);
+      return res.status(400).json({ 
+        message: errors[0] || "Validation failed. Please check your input." 
+      });
+    }
+    
+    return res.status(500).json({ 
+      message: "Something went wrong. Please try again later." 
+    });
   }
 };
 
@@ -40,20 +79,30 @@ export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res
-      .status(400)
-      .json({ message: "Email and password are required" });
+    return res.status(400).json({ 
+      message: "Please enter both email and password" 
+    });
   }
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ 
+        message: "Invalid email or password. Please check your credentials and try again." 
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(401).json({ 
+        message: "Your account has been deactivated. Please contact support for assistance." 
+      });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ 
+        message: "Invalid email or password. Please check your credentials and try again." 
+      });
     }
 
     const token = generateToken(user);
@@ -66,11 +115,12 @@ export const loginUser = async (req, res) => {
         role: user.role,
       },
       token,
+      message: `Welcome back, ${user.name}!`,
     });
   } catch (err) {
-    return res
-      .status(500)
-      .json({ message: "Failed to login", error: err.message });
+    return res.status(500).json({ 
+      message: "Something went wrong. Please try again later." 
+    });
   }
 };
 
