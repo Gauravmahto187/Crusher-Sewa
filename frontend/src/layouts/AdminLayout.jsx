@@ -5,13 +5,25 @@ const AdminLayout = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    if (location.pathname === path) return true;
+    // For materials routes, check if pathname starts with the base path + /materials
+    if (path.includes("/materials") && location.pathname.includes("/materials")) {
+      return location.pathname.startsWith(basePath + "/materials");
+    }
+    return location.pathname.startsWith(path + "/");
+  };
+
+  const isAdmin = user?.role === "ADMIN";
+  const basePath = isAdmin ? "/admin" : "/manager";
 
   const navItems = [
-    { path: "/admin/dashboard", label: "Dashboard", icon: "grid" },
-    { path: "/admin/users/create", label: "Create User", icon: "plus" },
-    { path: "/admin/users", label: "Manage Users", icon: "users" },
-  ];
+    { path: `${basePath}/dashboard`, label: "Dashboard", icon: "grid", show: true },
+    { path: `${basePath}/users/create`, label: "Create User", icon: "plus", show: isAdmin },
+    { path: `${basePath}/users`, label: "Manage Users", icon: "users", show: isAdmin },
+    { path: `${basePath}/materials/add`, label: "Add Material", icon: "plus", show: true },
+    { path: `${basePath}/materials`, label: "Manage Materials", icon: "box", show: true },
+  ].filter(item => item.show);
 
   const getIcon = (name) => {
     switch (name) {
@@ -33,6 +45,12 @@ const AdminLayout = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
         );
+      case "box":
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+        );
       default:
         return null;
     }
@@ -43,13 +61,13 @@ const AdminLayout = () => {
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-stone-200 flex flex-col fixed h-full">
         <div className="p-6">
-          <Link to="/admin/dashboard" className="flex items-center gap-2">
+          <Link to={`${basePath}/dashboard`} className="flex items-center gap-2">
             <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">CS</span>
             </div>
             <div>
               <span className="text-base font-semibold text-stone-800 block">Crusher Sewa</span>
-              <span className="text-xs text-stone-400">Admin Panel</span>
+              <span className="text-xs text-stone-400">{isAdmin ? "Admin Panel" : "Manager Panel"}</span>
             </div>
           </Link>
         </div>

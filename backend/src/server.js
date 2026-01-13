@@ -7,6 +7,12 @@ import { connectDB } from "./config/db.js";
 import { ensureAdminSeed } from "./models/User.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import materialRoutes from "./routes/materialRoutes.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -18,6 +24,9 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
+// Serve static files from uploads folder
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 // Health check
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", service: "Crusher Material Sewa" });
@@ -26,6 +35,7 @@ app.get("/api/health", (_req, res) => {
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/materials", materialRoutes);
 
 // Start server after DB connects
 const start = async () => {

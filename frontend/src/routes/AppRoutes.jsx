@@ -8,6 +8,8 @@ import Register from "../pages/Register.jsx";
 import Dashboard from "../pages/admin/Dashboard.jsx";
 import CreateUser from "../pages/admin/CreateUser.jsx";
 import ManageUsers from "../pages/admin/ManageUsers.jsx";
+import AddMaterial from "../pages/admin/AddMaterial.jsx";
+import ManageMaterials from "../pages/admin/ManageMaterials.jsx";
 import ManagerDashboard from "../pages/ManagerDashboard.jsx";
 import Materials from "../pages/contractor/Materials.jsx";
 import Orders from "../pages/contractor/Orders.jsx";
@@ -40,7 +42,17 @@ const AppRoutes = () => (
       <Route path="/admin/dashboard" element={<Dashboard />} />
       <Route path="/admin/users/create" element={<CreateUser />} />
       <Route path="/admin/users" element={<ManageUsers />} />
+      <Route path="/admin/materials/add" element={<AddMaterial />} />
+      <Route path="/admin/materials" element={<ManageMaterials />} />
     </Route>
+    <Route
+      path="/manager"
+      element={
+        <PrivateRoute allowedRoles={["MANAGER", "ADMIN"]}>
+          <Navigate to="/manager/dashboard" replace />
+        </PrivateRoute>
+      }
+    />
     <Route
       path="/manager/dashboard"
       element={
@@ -49,6 +61,16 @@ const AppRoutes = () => (
         </PrivateRoute>
       }
     />
+    <Route
+      element={
+        <PrivateRoute allowedRoles={["MANAGER", "ADMIN"]}>
+          <AdminLayout />
+        </PrivateRoute>
+      }
+    >
+      <Route path="/manager/materials/add" element={<AddMaterial />} />
+      <Route path="/manager/materials" element={<ManageMaterials />} />
+    </Route>
     <Route
       path="/contractor"
       element={
